@@ -1,5 +1,5 @@
 /**
- * Authors: Alex Adomako Adusei, Osueke Christian, Adedolapo Olaiya.
+ * Author: Alex Adomako Adusei
  */
 
 let username;
@@ -26,6 +26,8 @@ $(document).ready(function () {
         e.preventDefault();
         const answer = $("#answer").val().trim().toLowerCase();
         const old_question = $('.question').last().text().trim();
+
+
         if (answer.length) {
             $("#answer").val('');
             printAnswer(answer);
@@ -47,7 +49,20 @@ $(document).ready(function () {
  * @param {string} answer 
  */
 function determineQuestion(old_question, answer) {
-	
+    if(old_question.includes('travel')){
+        return getTravelInfo(answer)
+    }
+
+
+    if(old_question.includes("Ok, which country would you like to know about?")){
+        return getCountryInformation(answer)
+    }
+
+    if(answer.includes('travel')){
+        return getTravelInfo('yes')
+    }
+
+
     if (old_question.includes(questionsDataSet[0].old)) {
         return getNameQuestion(answer);
     }
@@ -101,13 +116,6 @@ function getSorryMessage(answer) {
  * @param {string} old_question 
  * @param {string} answer 
  */
-function getCurrentTIme(){
-	return new Date().toLocaleTimeString(navigator.language, {
-        hour: '2-digit',
-        minute:'2-digit'
-      });
-}
-
 function getNameQuestion(answer) {
     if (greetings.find(greet => greet == answer)) {
         return printQuestion(questionsDataSet[0].old);
@@ -140,6 +148,23 @@ function getLocationQuestion(answer) {
         return printQuestion(questionsDataSet[2].old);
     }
     return printQuestion('come on buddy i just want to know you better &#128526;. please confirm are you from' + getCountry() + ' ?');
+}
+
+function getTravelInfo(answer){
+    if(positiveResponse.includes(answer))   return printQuestion('Ok, which country would you like to know about?');
+
+    return printQuestion('Oh, I am sorry you are not interested')
+}
+function getCountryInformation(answer){
+    const url = `https://cors-anywhere.herokuapp.com/http://timbu.com/${answer}`;
+    const data = getTimbuTravelInfo(url)
+    let info = $.parseHTML(data);
+    if(info.length === 0){
+        return printQuestion(`I currently do not have information about ${answer}. Type 'travel' again to try another country`);
+    }
+    let final = $(info).find('.lp-popular').html()
+    printQuestion(final)
+    return printQuestion(`Find more information about ${answer} at <a href="http://timbu.com/${answer}">http://timbu.com/${answer}</a>`)
 }
 
 
@@ -214,22 +239,20 @@ function printQuestion(question) {
         var new_question = '<div class="chat-bubble incoming-chat"> <div class="sender-details">';
         new_question += '<img class="sender-avatar img-xs rounded-circle" src="images/avatar1.png" alt="profile image"></div>';
         new_question += '<div class="chat-message question" style="display: inline-block; margin-bottom: 5px">';
-        new_question += ' <p> ' + question + '<span class="time">' + getCurrentTIme() + '</span></p> </div>';
+        new_question += ' <p> ' + question + '</p> </div>';
     }
-	
+
     setTimeout(function () {
         $('#chat').append(new_question);
-		window.scrollTo(0,document.body.scrollHeight);
     }, 800);
 }
 
 function printAnswer(answer) {
     var answer_chatbot = '<div class="chat-bubble outgoing-chat"><div class="sender-details">';
     answer_chatbot += '<img class="sender-avatar img-xs rounded-circle" src="images/avatar.png" alt="profile image"></div>';
-    answer_chatbot += '<div class="chat-message"> <p>' + answer + '<span class="time" style = "color: #fff;">' + ' ' + ' ' + getCurrentTIme() + '</span></p></div> </div>';
+    answer_chatbot += '<div class="chat-message"> <p>' + answer + '</p></div> </div>';
 
     $('#chat').append(answer_chatbot);
-	window.scrollTo(0,document.body.scrollHeight);
 }
 
 
@@ -258,6 +281,20 @@ function basicRequest(url) {
         type: 'GET',
         async: false,
     }).done(function (response) {
+        console.log("response", response)
+        data = response;
+    });
+    return data;
+}
+
+function getTimbuTravelInfo(url) {
+    let data = null;
+    $.ajax({
+        url: url,
+        type: 'GET',
+        async: false,
+    }).done(function (response) {
+        console.log("response", response)
         data = response;
     });
     return data;
@@ -27050,5 +27087,9 @@ var questionsDataSet = [
     {
         "old": "what would you say you do here",
         "new": "I'm here to answer your questions and help out."
+    },
+    {
+        "old": "Would you like to travel?",
+        "new": "Ok, which country would you like to travel to?"
     }
 ];
