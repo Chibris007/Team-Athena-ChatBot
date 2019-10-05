@@ -49,9 +49,7 @@ $(document).ready(function () {
  * @param {string} answer 
  */
 function determineQuestion(old_question, answer) {
-    if(old_question.includes('travel')){
-        return getTravelInfo(answer)
-    }
+
 
 
     if(old_question.includes("Ok, which country would you like to know about?")){
